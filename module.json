@@ -3,7 +3,7 @@
   "title": "Pathfinder Campaign Timeline",
   "description": "A module to keep track of the timeline in a Pathfinder campaign.",
   "version": "1.0.0",
-  "author": "Your Name",
+  "author": "Felix Pape",
   "minimumCoreVersion": "0.7.9",
   "compatibleCoreVersion": "0.7.9",
   "scripts": [

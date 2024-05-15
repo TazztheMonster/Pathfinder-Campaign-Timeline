@@ -25,18 +25,18 @@ jobs:
       - name: Install zip
         run: sudo apt-get install zip -y
 
-      - name: Update module.json version and prepare zip
+      - name: Update module.json version
         run: |
           VERSION=$(date +'%Y.%m.%d.%H%M')
           echo "VERSION=$VERSION" >> $GITHUB_ENV
-          
-          DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/v${{ env.VERSION }}/pathfinder-timeline.zip"
+
           MANIFEST_URL="https://raw.githubusercontent.com/${{ github.repository }}/main/module.json"
           
-          jq --arg ver "$VERSION" --arg download_url "$DOWNLOAD_URL" --arg manifest_url "$MANIFEST_URL" \
-            '.version = $ver | .download = $download_url | .manifest = $manifest_url' module.json > tmp.$$.json && mv tmp.$$.json module.json
+          jq --arg ver "$VERSION" --arg manifest_url "$MANIFEST_URL" \
+            '.version = $ver | .manifest = $manifest_url' module.json > tmp.$$.json && mv tmp.$$.json module.json
 
-          zip -r pathfinder-timeline.zip . -x .git/\* \*.github/workflows/\*
+      - name: Create zip file
+        run: zip -r pathfinder-timeline.zip . -x .git/\* \*.github/workflows/\*
 
       - name: Create release
         id: create_release
@@ -50,6 +50,7 @@ jobs:
           prerelease: false
 
       - name: Upload release asset
+        id: upload_release_asset
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -58,3 +59,24 @@ jobs:
           asset_path: ./pathfinder-timeline.zip
           asset_name: pathfinder-timeline.zip
           asset_content_type: application/zip
+
+      - name: Get release asset URL
+        id: get_release_asset_url
+        run: |
+          ASSET_ID=$(curl -s \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/tags/v${{ env.VERSION }}" \
+            | jq '.assets[] | select(.name == "pathfinder-timeline.zip") | .id')
+          DOWNLOAD_URL=$(curl -s \
+            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+            "https://api.github.com/repos/${{ github.repository }}/releases/assets/$ASSET_ID" \
+            | jq -r '.browser_download_url')
+          echo "DOWNLOAD_URL=$DOWNLOAD_URL" >> $GITHUB_ENV
+
+      - name: Update module.json in zip
+        run: |
+          unzip pathfinder-timeline.zip -d temp
+          jq --arg download_url "$DOWNLOAD_URL" '.download = $download_url' temp/module.json > temp/module.tmp.json
+          mv temp/module.tmp.json temp/module.json
+          cd temp
+          zip -r ../pathfinder-timeline.zip .

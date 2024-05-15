@@ -1,0 +1,19 @@
+{
+  "name": "pathfinder-timeline",
+  "title": "Pathfinder Campaign Timeline",
+  "description": "A module to keep track of the timeline in a Pathfinder campaign.",
+  "version": "0.0.0",
+  "author": "Your Name",
+  "minimumCoreVersion": "0.7.9",
+  "compatibleCoreVersion": "0.7.9",
+  "scripts": [
+    "js/main.js"
+  ],
+  "esmodules": [],
+  "styles": [],
+  "packs": [],
+  "languages": [],
+  "url": "",
+  "manifest": "",
+  "download": ""
+}

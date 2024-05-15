@@ -2,7 +2,7 @@
   "name": "pathfinder-timeline",
   "title": "Pathfinder Campaign Timeline",
   "description": "A module to keep track of the timeline in a Pathfinder campaign.",
-  "version": "0.0.0",
+  "version": "2024.05.15.1045",
   "author": "Your Name",
   "minimumCoreVersion": "0.7.9",
   "compatibleCoreVersion": "0.7.9",
@@ -14,6 +14,6 @@
   "packs": [],
   "languages": [],
   "url": "",
-  "manifest": "",
-  "download": ""
+  "manifest": "https://raw.githubusercontent.com/TazztheMonster/Pathfinder-Campaign-Timeline/main/module.json",
+  "download": "https://github.com/TazztheMonster/Pathfinder-Campaign-Timeline/releases/download/v2024.05.15.1045/pathfinder-timeline.zip"
 }

@@ -1,82 +1,46 @@
-name: Build and Release Foundry VTT Module
+name: Release
 
 on:
   push:
-    branches:
-      - main
-
-permissions:
-  contents: write
-  actions: read
+    tags:
+      - 'v*.*.*'
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
-
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v2
 
-      - name: Set up Node.js
-        uses: actions/setup-node@v2
-        with:
-          node-version: '14'
+    - name: Update module.json
+      run: |
+        # Your script to update module.json
+        sed -i 's/"version": ".*"/"version": "${{ github.ref }}"/' module.json
 
-      - name: Install zip
-        run: sudo apt-get install zip -y
+    - name: Commit and push changes
+      run: |
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+        git add module.json
+        git commit -m "Update module.json to ${{ github.ref }}"
+        git push origin main
 
-      - name: Update module.json version
-        run: |
-          VERSION=$(date +'%Y.%m.%d.%H%M')
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
+    - name: Create Release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        tag_name: ${{ github.ref }}
+        release_name: Release ${{ github.ref }}
+        draft: false
+        prerelease: false
 
-          MANIFEST_URL="https://raw.githubusercontent.com/${{ github.repository }}/main/module.json"
-          
-          jq --arg ver "$VERSION" --arg manifest_url "$MANIFEST_URL" \
-            '.version = $ver | .manifest = $manifest_url' module.json > tmp.$$.json && mv tmp.$$.json module.json
-
-      - name: Create zip file
-        run: zip -r pathfinder-timeline.zip . -x .git/\* \*.github/workflows/\*
-
-      - name: Create release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: "v${{ env.VERSION }}"
-          release_name: "Release ${{ env.VERSION }}"
-          draft: false
-          prerelease: false
-
-      - name: Upload release asset
-        id: upload_release_asset
-        uses: actions/upload-release-asset@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ./pathfinder-timeline.zip
-          asset_name: pathfinder-timeline.zip
-          asset_content_type: application/zip
-
-      - name: Get release asset URL
-        id: get_release_asset_url
-        run: |
-          ASSET_ID=$(curl -s \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/releases/tags/v${{ env.VERSION }}" \
-            | jq '.assets[] | select(.name == "pathfinder-timeline.zip") | .id')
-          DOWNLOAD_URL=$(curl -s \
-            -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
-            "https://api.github.com/repos/${{ github.repository }}/releases/assets/$ASSET_ID" \
-            | jq -r '.browser_download_url')
-          echo "DOWNLOAD_URL=$DOWNLOAD_URL" >> $GITHUB_ENV
-
-      - name: Update module.json in zip
-        run: |
-          unzip pathfinder-timeline.zip -d temp
-          jq --arg download_url "$DOWNLOAD_URL" '.download = $download_url' temp/module.json > temp/module.tmp.json
-          mv temp/module.tmp.json temp/module.json
-          cd temp
-          zip -r ../pathfinder-timeline.zip .
+    - name: Upload Release Asset
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./module.json
+        asset_name: module.json
+        asset_content_type: application/json

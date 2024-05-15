@@ -22,17 +22,21 @@ jobs:
         with:
           node-version: '14'
 
-      - name: Update module.json version
-        run: |
-          VERSION=$(date +'%Y.%m.%d.%H%M')
-          echo "VERSION=$VERSION" >> $GITHUB_ENV
-          jq --arg ver "$VERSION" '.version = $ver' module.json > tmp.$$.json && mv tmp.$$.json module.json
-
       - name: Install zip
         run: sudo apt-get install zip -y
 
-      - name: Create zip file
-        run: zip -r pathfinder-timeline.zip . -x .git/\* \*.github/workflows/\*
+      - name: Update module.json version and prepare zip
+        run: |
+          VERSION=$(date +'%Y.%m.%d.%H%M')
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          
+          DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/v${{ env.VERSION }}/pathfinder-timeline.zip"
+          MANIFEST_URL="https://raw.githubusercontent.com/${{ github.repository }}/main/module.json"
+          
+          jq --arg ver "$VERSION" --arg download_url "$DOWNLOAD_URL" --arg manifest_url "$MANIFEST_URL" \
+            '.version = $ver | .download = $download_url | .manifest = $manifest_url' module.json > tmp.$$.json && mv tmp.$$.json module.json
+
+          zip -r pathfinder-timeline.zip . -x .git/\* \*.github/workflows/\*
 
       - name: Create release
         id: create_release
@@ -54,17 +58,3 @@ jobs:
           asset_path: ./pathfinder-timeline.zip
           asset_name: pathfinder-timeline.zip
           asset_content_type: application/zip
-
-      - name: Update module.json with URLs
-        run: |
-          DOWNLOAD_URL="https://github.com/${{ github.repository }}/releases/download/v${{ env.VERSION }}/pathfinder-timeline.zip"
-          MANIFEST_URL="https://raw.githubusercontent.com/${{ github.repository }}/main/module.json"
-          jq --arg download_url "$DOWNLOAD_URL" --arg manifest_url "$MANIFEST_URL" '.download = $download_url | .manifest = $manifest_url' module.json > tmp.$$.json && mv tmp.$$.json module.json
-
-      - name: Commit updated module.json
-        run: |
-          git config --global user.name 'github-actions'
-          git config --global user.email 'github-actions@github.com'
-          git add module.json
-          git commit -m "Update module.json with manifest and download URLs"
-          git push origin main

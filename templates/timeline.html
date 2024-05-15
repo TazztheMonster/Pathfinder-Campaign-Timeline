@@ -1,0 +1,60 @@
+<div>
+  <h2>Current Location: {{location}}</h2>
+  <form>
+    <label for="location">Update Location:</label>
+    <input type="text" id="location" name="location" required>
+    <button type="button" id="update-location">Update</button>
+  </form>
+
+  <h2>Characters</h2>
+  <ul>
+    {{#each characters}}
+      <li>{{this.name}} - Last Slept: Day {{this.last_slept.day}} ({{this.last_slept.period}})</li>
+    {{/each}}
+  </ul>
+  <form>
+    <label for="character">Character:</label>
+    <select id="character" name="character" required>
+      {{#each characters}}
+        <option value="{{@key}}">{{this.name}}</option>
+      {{/each}}
+    </select>
+    <label for="day">Day:</label>
+    <select id="sleep-day" name="day" required>
+      {{#each days}}
+        <option value="{{this}}">{{this}}</option>
+      {{/each}}
+    </select>
+    <label for="period">Period:</label>
+    <select id="sleep-period" name="period" required>
+      {{#each periods}}
+        <option value="{{this}}">{{this}}</option>
+      {{/each}}
+    </select>
+    <button type="button" id="update-sleep">Update Sleep</button>
+  </form>
+
+  <h2>Events</h2>
+  <ul>
+    {{#each events}}
+      <li>Day {{this.day}} ({{this.period}}): {{this.description}}</li>
+    {{/each}}
+  </ul>
+  <form>
+    <label for="day">Day:</label>
+    <select id="event-day" name="day" required>
+      {{#each days}}
+        <option value="{{this}}">{{this}}</option>
+      {{/each}}
+    </select>
+    <label for="period">Period:</label>
+    <select id="event-period" name="period" required>
+      {{#each periods}}
+        <option value="{{this}}">{{this}}</option>
+      {{/each}}
+    </select>
+    <label for="description">Description:</label>
+    <input type="text" id="event-description" name="description" required>
+    <button type="button" id="add-event">Add Event</button>
+  </form>
+</div>
